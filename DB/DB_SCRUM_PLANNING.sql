@@ -1,3 +1,8 @@
+-- Bilsan Gaddiel Flores Lopez 240068
+-- Leonardo Mariano Rios Garcia 220839
+-- Yarling Moises Alvarez Ruiz 240771
+
+
 CREATE DATABASE [DB_SCRUM_PLANNING]
 GO
 
