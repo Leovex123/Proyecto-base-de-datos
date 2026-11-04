@@ -1,0 +1,34 @@
+application/
+│
+└── use_cases/
+    └── UserUseCase.py
+
+domain/
+│
+├── entities/
+	└──	UserModels
+├── interfaces/
+	└──	IUserRepository.py
+└── shared/
+	├──	database_exception.py
+	├── OperationResult.py
+	└── QueryResult.py
+	
+infrastructure/
+│
+├── database/
+│	├──	base_repository.py
+│	└── connection.py
+└── repositories/
+    └── UsersRepository.py
+
+presentation/
+│
+├── controllers/
+│   └── UsersController.py
+│
+└── states/
+    ├── UserRequest.py
+    └── UserResponse.py
+
+main.py
