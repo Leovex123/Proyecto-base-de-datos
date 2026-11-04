@@ -28,7 +28,7 @@ CREATE TABLE [SQM_SECURITY].[TBL_Roles]
 	rolName VARCHAR(80) NOT NULL,
 	rolCreationDate DATETIME NOT NULL,
 	rolCreatorId INT NOT NULL,
-	rolModificationDate DATETIME NOT NULL,
+	rolModificationDate DATETIME NULL,
 	rolModificatorId INT NULL,
 	rolEnable BIT NOT NULL
 );

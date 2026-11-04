@@ -5,6 +5,7 @@ from typing import Optional, List
 class UserBase(BaseModel):
     userId: int
     userFullName: str
+    userEmail: str
     userName: str
     userRolId: int
     userCreationDate: datetime
@@ -16,19 +17,24 @@ class UserBase(BaseModel):
 
 class UserCreate(BaseModel):
     userFullName: str
+    userEmail: str
     userName: str
     userPassword: str
     userRolId: int
-    userCreatorId: Optional[int] = None
+
+
+class UserLogin(BaseModel):
+    userName: str
+    userPassword: str
 
 class UserUpdate(BaseModel):
     userId: int
     userFullName: Optional[str] = None
+    userEmail: Optional[str] = None
     userName: Optional[str] = None
-    userPassword: Optional[bytes] = None
+    userPassword: Optional[str] = None
     userRolId: Optional[int] = None
     userModificationDate: Optional[datetime] = None
-    userModificatorId: int
     userEnable: Optional[bool] = None
 
 

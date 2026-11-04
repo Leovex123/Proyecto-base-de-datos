@@ -23,6 +23,7 @@ CREATE OR ALTER PROC [SQM_SECURITY].[USP_Users]
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
 
     DECLARE @w_userPasswordEncrypted VARBINARY(256), @w_totalRows INT;
 
@@ -122,7 +123,7 @@ BEGIN
             SET @o_MensajeUsuario = 'EL ID DEL USUARIO ES OBLIGATORIO';
         END;
 
-        IF ISNULL(@i_userModificatorId,0) = 0
+        ELSE IF ISNULL(@i_userModificatorId,0) = 0
         BEGIN
             SET @o_Numero = 400;
             SET @o_MensajeUsuario = 'EL ID DEL MODIFICADOR ES OBLIGATORIO';
@@ -150,7 +151,7 @@ BEGIN
             SET @o_MensajeUsuario = 'EL CORREO YA EXISTE';
         END;
 
-        ELSE IF @i_userRolId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM [SQM_CATALOGS].[TBL_Roles] (NOLOCK) 
+        ELSE IF @i_userRolId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM [SQM_SECURITY].[TBL_Roles] (NOLOCK) 
 		WHERE rolId = @i_userRolId AND rolEnable = 1)
         BEGIN
             SET @o_Numero = 400;
@@ -200,7 +201,50 @@ BEGIN
         END
     END
 
--- SELECT USER --
+    -- AUTHENTICATE USER --
+    ELSE IF @w_Accion = 'L'
+    BEGIN
+        BEGIN TRY
+            OPEN SYMMETRIC KEY KEY_HASH
+                DECRYPTION BY CERTIFICATE CERT_SCRUMPLANNING;
+
+            SELECT userId, userName, userRolId
+            FROM [SQM_SECURITY].[TBL_Users]
+            WHERE userName = @i_userName
+                AND userEnable = 1
+                AND [SQM_SECURITY].[Fn_DecryptByKey](userPassword) = @i_userPassword;
+
+            SET @w_totalRows = @@ROWCOUNT;
+
+            IF @w_totalRows > 0
+            BEGIN
+                SET @o_Numero = 200;
+                SET @o_MensajeUsuario = 'AUTENTICACION CORRECTA';
+            END
+            ELSE
+            BEGIN
+                SET @o_Numero = 401;
+                SET @o_MensajeUsuario = 'USUARIO O CONTRASEÑA INCORRECTOS';
+            END;
+
+            CLOSE SYMMETRIC KEY KEY_HASH;
+        END TRY
+        BEGIN CATCH
+            IF EXISTS
+            (
+                SELECT 1
+                FROM sys.openkeys
+                WHERE key_name = 'KEY_HASH'
+            )
+                CLOSE SYMMETRIC KEY KEY_HASH;
+
+            SET @o_Numero = 500;
+            SET @o_MensajeUsuario = 'NO FUE POSIBLE AUTENTICAR AL USUARIO';
+            SET @o_MensajeTecnico = CONCAT_WS(' - ', ERROR_PROCEDURE(), ERROR_LINE(), ERROR_MESSAGE());
+        END CATCH
+    END
+
+    -- SELECT USER --
     ELSE IF @w_Accion = 'S'
     BEGIN
 
@@ -255,6 +299,11 @@ BEGIN
         SET @o_MensajeTecnico = 'EL PROCEDIMIENTO ALMACENADO NO TIENE HABILITADA ESA OPCION';
 
     END
+
+    SELECT
+        @o_Numero AS status_code,
+        @o_MensajeUsuario AS message_user,
+        @o_MensajeTecnico AS message_tech;
 
 END;
 GO
