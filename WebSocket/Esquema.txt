@@ -28,7 +28,6 @@ presentation/
 │   └── UsersController.py
 │
 └── states/
-    ├── UserRequest.py
-    └── UserResponse.py
+    ├── generic_state.py
 
 main.py

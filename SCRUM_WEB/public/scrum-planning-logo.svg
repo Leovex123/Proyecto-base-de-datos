@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="64" viewBox="0 0 320 64" fill="none" role="img" aria-labelledby="title description">
+  <title id="title">Scrum Planning</title>
+  <desc id="description">Logo profesional con un monograma SP dentro de un distintivo violeta e indigo.</desc>
+  <defs>
+    <linearGradient id="brand" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#brand)" stroke="#DDD6FE" stroke-width="2"/>
+  <path d="M17 19.5C20.5 16.8 24.8 15.5 29.2 16.2C34.4 16.9 38.2 20.2 38.8 24.7H31.7C31.2 23.1 29.8 22.1 27.8 21.9C25.5 21.7 23.8 22.8 23.8 24.5C23.8 26.1 25.1 26.8 28.1 27.4C35.3 28.8 39.5 31.6 39.5 37C39.5 43.2 34.1 47 27.1 47C20.9 47 16.4 44.1 14.9 39.2H22.2C23.3 41.1 25.1 42 27.7 42C30.2 42 32 40.8 32 39C32 37.4 30.8 36.6 27.4 36C20.7 34.8 16.4 32.2 16.4 26.9C16.4 23.9 17.5 21.4 19.7 19.5H17Z" fill="white"/>
+  <path d="M35 16.5H44.7C51.1 16.5 55.1 19.8 55.1 25.3C55.1 30.9 51 34.1 44.5 34.1H42V46H35V16.5ZM42.5 28.4H44.4C47.2 28.4 48.5 27.3 48.5 25.3C48.5 23.3 47.2 22.3 44.4 22.3H42.5V28.4Z" fill="white" opacity="0.92"/>
+  <text x="78" y="39" fill="#0F172A" font-family="Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" font-weight="750" letter-spacing="-1">Scrum Planning</text>
+</svg>
