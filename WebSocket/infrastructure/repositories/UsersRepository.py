@@ -1,4 +1,4 @@
-from domain.entities.userModels import UserCreate, UserLogin, UserUpdate
+﻿from domain.entities.UserModels import UserCreate, UserLogin, UserUpdate
 from domain.interfaces.IusersRepository import IUserRepository
 from domain.shared.operationResult import OperationResult
 from domain.shared.queryResult import QueryResult
@@ -96,3 +96,6 @@ class UserRepository(BaseRepository, IUserRepository):
                 rows_per_page
             )
         )
+
+
+

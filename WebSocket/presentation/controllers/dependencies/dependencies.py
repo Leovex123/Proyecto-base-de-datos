@@ -1,5 +1,5 @@
-from application.use_cases.usersUseCase import UserUseCase
-from infrastructure.repositories.usersRepository import UserRepository
+﻿from application.use_cases.usersUseCase import UserUseCase
+from infrastructure.repositories.UsersRepository import UserRepository
 
 
 def get_user_use_case() -> UserUseCase:

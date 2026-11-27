@@ -1,4 +1,4 @@
-from domain.entities.userModels import UserCreate, UserLogin, UserUpdate
+﻿from domain.entities.UserModels import UserCreate, UserLogin, UserUpdate
 from domain.interfaces.IusersRepository import IUserRepository
 
 
@@ -28,3 +28,7 @@ class UserUseCase:
             page_number=page_number,
             rows_per_page=rows_per_page
         )
+
+
+
+

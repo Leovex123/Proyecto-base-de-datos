@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from typing import Annotated
 
 from fastapi import APIRouter
@@ -7,9 +7,9 @@ from fastapi import HTTPException
 from fastapi import Query
 
 from application.use_cases.usersUseCase import UserUseCase
-from domain.entities.userModels import UserCreate, UserLogin, UserUpdate
+from domain.entities.UserModels import UserCreate, UserLogin, UserUpdate
 
-from infrastructure.repositories.usersRepository import UserRepository
+from infrastructure.repositories.UsersRepository import UserRepository
 from presentation.security import create_access_token, get_admin_user
 
 from presentation.states.generic_states import (
@@ -135,3 +135,5 @@ def list_users(
             detail=result.message_user
         )
     return result
+
+
