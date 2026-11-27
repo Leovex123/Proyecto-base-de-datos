@@ -186,3 +186,4 @@ CREATE TABLE [SQM_GENERAL].[TBL_TaskComments]
 	taskCommentModificatorId INT REFERENCES [SQM_SECURITY].[TBL_Users] (userId) NULL,
 	taskCommentStatus BIT NOT NULL
 );
+

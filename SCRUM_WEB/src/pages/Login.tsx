@@ -1,128 +1,172 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent, ReactElement } from 'react'
+import { AuthError, login } from '../services/authService'
 
-const Login = (): ReactElement => {
-  const [email, setEmail] = useState<string>('')
+const BRAND_NAME = 'Scrum Planning'
+const BRAND_SLOGAN = 'Planifica con claridad, entrega con confianza.'
+const BRAND_DESCRIPTION = 'Backlog, sprints y tareas de tu equipo, en un solo lugar.'
+
+type ToastType = 'error' | 'success'
+
+interface ToastState {
+  message: string
+  type: ToastType
+}
+
+interface LoginProps {
+  onSuccess?: () => void
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
+const validateIdentifier = (value: string): string => {
+  if (!value) return 'Ingresa tu correo o usuario.'
+
+  if (value.includes('@')) {
+    if (value.length > 80 || !EMAIL_REGEX.test(value)) {
+      return 'Escribe un correo válido, por ejemplo nombre@empresa.com.'
+    }
+    return ''
+  }
+
+  if (value.length < 3 || value.length > 80 || /\s/.test(value)) {
+    return 'El usuario debe tener entre 3 y 80 caracteres y no puede incluir espacios.'
+  }
+
+  return ''
+}
+
+const validatePassword = (value: string): string => {
+  if (!value) return 'Ingresa tu contraseña.'
+  if (value.length > 128) return 'La contraseña no puede superar los 128 caracteres.'
+  return ''
+}
+
+const Login = ({ onSuccess }: LoginProps): ReactElement => {
+  const [identifier, setIdentifier] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false)
-  const [toastMessage, setToastMessage] = useState<string>('')
-  const [emailError, setEmailError] = useState<string>('')
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [toast, setToast] = useState<ToastState | null>(null)
+  const [identifierError, setIdentifierError] = useState<string>('')
   const [passwordError, setPasswordError] = useState<string>('')
 
   useEffect(() => {
-    if (!toastMessage) return
+    if (!toast) return
 
-    const timeoutId = window.setTimeout(() => setToastMessage(''), 4000)
+    const timeoutId = window.setTimeout(() => setToast(null), 4000)
     return () => window.clearTimeout(timeoutId)
-  }, [toastMessage])
+  }, [toast])
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
+    if (isSubmitting) return
 
-    const normalizedEmail = email.trim()
-    let nextEmailError = ''
-    let nextPasswordError = ''
+    const normalizedIdentifier = identifier.trim()
+    const nextIdentifierError = validateIdentifier(normalizedIdentifier)
+    const nextPasswordError = validatePassword(password)
 
-    if (!normalizedEmail) {
-      nextEmailError = 'Ingresa tu correo electrónico.'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      nextEmailError = 'Ingresa un correo electrónico válido.'
-    }
-
-    if (!password) {
-      nextPasswordError = 'Ingresa tu contraseña.'
-    } else if (password.length < 6) {
-      nextPasswordError = 'La contraseña debe tener al menos 6 caracteres.'
-    }
-
-    setEmailError(nextEmailError)
+    setIdentifierError(nextIdentifierError)
     setPasswordError(nextPasswordError)
 
-    if (nextEmailError) {
-      setToastMessage(nextEmailError)
+    if (nextIdentifierError) {
+      setToast({ message: nextIdentifierError, type: 'error' })
       return
     }
 
     if (nextPasswordError) {
-      setToastMessage(nextPasswordError)
+      setToast({ message: nextPasswordError, type: 'error' })
       return
     }
 
-    setToastMessage('El servicio de autenticación aún no está conectado.')
+    setIsSubmitting(true)
+
+    try {
+      await login(normalizedIdentifier, password)
+      setToast({ message: 'Sesión iniciada', type: 'success' })
+      onSuccess?.()
+    } catch (error) {
+      if (error instanceof AuthError && error.status === 401) {
+        setToast({ message: 'Usuario o contraseña incorrectos.', type: 'error' })
+      } else if (error instanceof AuthError) {
+        setToast({ message: error.message, type: 'error' })
+      } else {
+        setToast({ message: 'No pudimos iniciar sesión. Inténtalo de nuevo.', type: 'error' })
+      }
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
+  const inputClass = (hasError: boolean): string =>
+    `peer w-full rounded-xl border bg-white px-4 pb-3 pt-6 text-base text-slate-900 transition placeholder:text-transparent focus:outline-none focus:ring-4 ${
+      hasError
+        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15'
+        : 'border-slate-300 focus:border-violet-500 focus:ring-violet-500/15'
+    }`
+
+  const floatingLabelClass =
+    'pointer-events-none absolute left-4 top-3 text-xs font-medium text-slate-600 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-violet-700'
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-violet-100 via-white to-indigo-100 text-slate-900">
+    <main className="relative min-h-screen overflow-hidden bg-linear-to-br from-violet-100 via-white to-indigo-100 text-slate-900">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-40 -top-40 h-[30rem] w-[30rem] rounded-full bg-violet-300/55 blur-3xl" />
-        <div className="absolute -bottom-48 right-0 h-[38rem] w-[38rem] rounded-full bg-indigo-300/50 blur-3xl" />
+        <div className="absolute -left-40 -top-40 h-120 w-120 rounded-full bg-violet-300/55 blur-3xl" />
+        <div className="absolute -bottom-48 right-0 h-152 w-152 rounded-full bg-indigo-300/50 blur-3xl" />
         <div className="absolute bottom-20 left-1/3 h-72 w-72 rounded-full bg-violet-200/35 blur-3xl" />
       </div>
 
       <div className="relative mx-auto grid min-h-screen w-full max-w-7xl items-center gap-12 px-5 py-10 sm:px-8 lg:grid-cols-2 lg:px-12">
         <section className="hidden max-w-xl lg:block">
-          <img
-            src="/scrum-planning-logo.svg"
-            alt="Scrum Planning"
-            className="mb-16 h-14 w-auto"
-          />
+          <img src="/scrum-planning-logo.svg" alt={BRAND_NAME} className="mb-16 h-14 w-auto" />
 
-          <p className="mb-5 text-base font-semibold uppercase tracking-[0.18em] text-violet-700">
-            Tu equipo, en sintonía
-          </p>
           <h1 className="text-5xl font-semibold leading-tight tracking-tight xl:text-6xl">
-            Las grandes ideas empiezan con un buen plan.
+            {BRAND_SLOGAN}
           </h1>
-          <p className="mt-6 max-w-lg text-lg leading-8 text-slate-600">
-            Organiza tus proyectos, acompaña cada avance y construye mejores resultados en equipo.
-          </p>
+          <p className="mt-6 max-w-lg text-lg leading-8 text-slate-600">{BRAND_DESCRIPTION}</p>
         </section>
 
         <section className="mx-auto w-full max-w-md">
           <img
             src="/scrum-planning-logo.svg"
-            alt="Scrum Planning"
-            className="mb-8 h-12 w-auto mx-auto lg:hidden"
+            alt={BRAND_NAME}
+            className="mx-auto mb-8 h-12 w-auto lg:hidden"
           />
 
           <div className="rounded-3xl border border-slate-200 bg-white/95 p-7 shadow-xl shadow-slate-200/70 backdrop-blur-xl sm:p-10">
             <div className="mb-8">
-              <p className="mb-3 text-base font-semibold text-violet-700">Qué bueno verte</p>
               <h2 className="text-3xl font-semibold tracking-tight text-slate-900">Inicia sesión</h2>
               <p className="mt-2 text-base leading-6 text-slate-600">
-                Ingresa tus datos para continuar con tu espacio de trabajo.
+                Usa tu correo o tu nombre de usuario para entrar a tu espacio de trabajo.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} noValidate className="space-y-5">
               <div className="relative">
                 <input
-                  id="email"
-                  type="email"
-                  value={email}
+                  id="identifier"
+                  type="text"
+                  inputMode="email"
+                  value={identifier}
                   onChange={(e) => {
-                    setEmail(e.target.value)
-                    if (emailError) setEmailError('')
+                    setIdentifier(e.target.value)
+                    if (identifierError) setIdentifierError('')
                   }}
                   placeholder=" "
-                  autoComplete="email"
-                  aria-invalid={Boolean(emailError)}
-                  aria-describedby={emailError ? 'email-error' : undefined}
-                  className={`peer w-full rounded-xl border bg-white px-4 pb-3 pt-6 text-base text-slate-900 transition placeholder:text-transparent focus:outline-none focus:ring-4 ${
-                    emailError
-                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15'
-                      : 'border-slate-300 focus:border-violet-500 focus:ring-violet-500/15'
-                  }`}
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  disabled={isSubmitting}
+                  aria-invalid={Boolean(identifierError)}
+                  aria-describedby={identifierError ? 'identifier-error' : undefined}
+                  className={inputClass(Boolean(identifierError))}
                 />
-                <label
-                  htmlFor="email"
-                  className="pointer-events-none absolute left-4 top-3 text-xs font-medium text-slate-600 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-violet-700"
-                >
-                  Correo electrónico
+                <label htmlFor="identifier" className={floatingLabelClass}>
+                  Correo o usuario
                 </label>
-                {emailError && (
-                  <p id="email-error" className="mt-2 text-sm font-medium text-red-600">
-                    {emailError}
+                {identifierError && (
+                  <p id="identifier-error" className="mt-2 text-sm font-medium text-red-600">
+                    {identifierError}
                   </p>
                 )}
               </div>
@@ -138,18 +182,12 @@ const Login = (): ReactElement => {
                   }}
                   placeholder=" "
                   autoComplete="current-password"
+                  disabled={isSubmitting}
                   aria-invalid={Boolean(passwordError)}
                   aria-describedby={passwordError ? 'password-error' : undefined}
-                  className={`peer w-full rounded-xl border bg-white px-4 pb-3 pr-12 pt-6 text-base text-slate-900 transition placeholder:text-transparent focus:outline-none focus:ring-4 ${
-                    passwordError
-                      ? 'border-red-400 focus:border-red-500 focus:ring-red-500/15'
-                      : 'border-slate-300 focus:border-violet-500 focus:ring-violet-500/15'
-                  }`}
+                  className={`${inputClass(Boolean(passwordError))} pr-12`}
                 />
-                <label
-                  htmlFor="password"
-                  className="pointer-events-none absolute left-4 top-3 text-xs font-medium text-slate-600 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-violet-700"
-                >
+                <label htmlFor="password" className={floatingLabelClass}>
                   Contraseña
                 </label>
                 <button
@@ -179,34 +217,45 @@ const Login = (): ReactElement => {
 
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-500 py-3.5 font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:bg-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-400/30 active:scale-[0.99]"
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3.5 font-semibold text-white shadow-lg shadow-violet-950/20 transition hover:bg-violet-500 focus:outline-none focus:ring-4 focus:ring-violet-400/30 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Iniciar sesión
+                {isSubmitting && (
+                  <svg className="h-4 w-4 animate-spin motion-reduce:animate-none" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.3" strokeWidth="3" />
+                    <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                  </svg>
+                )}
+                {isSubmitting ? 'Iniciando sesión' : 'Iniciar sesión'}
               </button>
             </form>
-
-            <p className="mt-8 text-center text-sm leading-6 text-slate-600">
-              Al continuar, accedes de forma segura a tu espacio de trabajo.
-            </p>
           </div>
         </section>
       </div>
 
-      {toastMessage && (
+      {toast && (
         <div
           role="alert"
-          className="toast-enter fixed right-5 top-5 z-50 flex max-w-sm items-start gap-3 rounded-2xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-xl shadow-violet-950/15"
+          className="toast-enter fixed right-5 top-5 z-50 flex max-w-sm items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 shadow-xl shadow-slate-900/10"
         >
-          <div className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-violet-100 text-violet-700">
+          <div
+            className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full ${
+              toast.type === 'success' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+            }`}
+          >
             <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              {toast.type === 'success' ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              )}
             </svg>
           </div>
-          <p className="py-1 leading-6">{toastMessage}</p>
+          <p className="py-1 leading-6">{toast.message}</p>
           <button
             type="button"
             aria-label="Cerrar notificación"
-            onClick={() => setToastMessage('')}
+            onClick={() => setToast(null)}
             className="ml-1 rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
           >
             <svg aria-hidden="true" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
